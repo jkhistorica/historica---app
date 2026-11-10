@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Historica</title>
+<style>
+:root{--bg:#e9eeea;--surface:#f7f9f6;--ink:#17262b;--muted:#566469;--line:#c5d0cb;--accent:#1f5a63;--accent-ink:#fff;--gold:#9a6a12;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121b1e;--surface:#1b272b;--ink:#e6eeeb;--muted:#9fb0ab;--line:#2f4046;--accent:#6fb8c1;--accent-ink:#0d1a1d;--gold:#e0b04f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121b1e;--surface:#1b272b;--ink:#e6eeeb;--muted:#9fb0ab;--line:#2f4046;--accent:#6fb8c1;--accent-ink:#0d1a1d;--gold:#e0b04f;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.55}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+.hero{background:var(--accent);color:var(--accent-ink);border-radius:18px;padding:22px 18px 20px;margin-bottom:14px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:linear-gradient(90deg,#e07b1a 33%,#f4f4ef 33% 66%,#2f8f4e 66%)}
+h1{font-size:1.9rem;margin:0 0 4px;letter-spacing:-.01em}
+.sub{margin:0;opacity:.92;font-size:.95rem}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 0 10px;z-index:5}
+input[type=search]{width:100%;font:inherit;font-size:1rem;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px}
+.chip{flex:none;font:inherit;font-size:.85rem;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tools{display:flex;justify-content:space-between;align-items:center;margin:8px 0}
+.count{color:var(--muted);font-size:.85rem}
+.link{font:inherit;font-size:.9rem;background:none;border:0;color:var(--accent);padding:6px 0;cursor:pointer;text-decoration:underline}
+.entry{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:14px;margin:0 0 12px;padding:14px 16px}
+.entry.in{border-left-color:#d9701c}
+.entry.fav{border-left-color:var(--gold)}
+.head{display:flex;gap:12px;align-items:flex-start}
+.grow{flex:1;min-width:0}
+.badge{flex:none;width:44px;height:44px;border-radius:12px;background:var(--bg);display:grid;place-items:center;font-size:1.5rem}
+.term{font-size:1.15rem;font-weight:700;margin:0}
+.meta{color:var(--muted);font-size:.85rem;margin:2px 0 6px}
+.def{margin:0}
+.star{flex:none;font-size:1.3rem;line-height:1;background:none;border:0;color:var(--muted);cursor:pointer;padding:4px}
+.star[aria-pressed=true]{color:var(--gold)}
+.empty{color:var(--muted);padding:24px 0;text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<meta name="theme-color" content="#1f5a63">
+</head>
+<body>
+<div class="wrap">
+  <div class="hero"><h1>Historica</h1>
+  <p class="sub">Look up the people, events and ideas that shaped the world, with a deep dive into India.</p></div>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Search a term, e.g. Renaissance" aria-label="Search terms" autocomplete="off">
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="tools">
+    <span class="count" id="count"></span>
+    <button class="link" id="rand">Show a random term</button>
+  </div>
+  <div id="list"></div>
+</div>
+<script>
+var ERAS=["Ancient","Classical","Medieval","Early modern","Modern"];
+var EI={"Ancient":"🏺","Classical":"🏛️","Medieval":"🏰","Early modern":"🧭","Modern":"⚙️"};
+var D=[
+["Mesopotamia","Ancient","c. 3500 BCE","The land between the Tigris and Euphrates rivers, home to Sumer, Babylon and Assyria. Cities, writing and the wheel appeared here."],
+["Cuneiform","Ancient","c. 3200 BCE","Wedge-shaped script pressed into clay tablets in Sumer. One of the earliest writing systems."],
+["Code of Hammurabi","Ancient","c. 1754 BCE","A Babylonian law code carved on a stone pillar. It set fixed penalties and is famous for “an eye for an eye.”"],
+["Pharaoh","Ancient","c. 3100 BCE","The king of ancient Egypt, seen as both ruler and divine link between gods and people."],
+["Pyramids of Giza","Ancient","c. 2560 BCE","Royal tombs built for pharaohs near modern Cairo. The Great Pyramid was the tallest human-made structure for about 3,800 years."],
+["Bronze Age collapse","Ancient","c. 1200 BCE","A sudden breakdown of Mediterranean powers, including the Hittites and Mycenaeans, linked to drought, invasion and trade failure."],
+["Phoenicians","Ancient","c. 1500 BCE","Sea traders from the Levant who spread an alphabet that later became the base for Greek and Latin letters."],
+["Polis","Classical","c. 800 BCE","A Greek city-state such as Athens or Sparta, with its own government, laws and army."],
+["Democracy","Classical","508 BCE","Rule by the people. Athens introduced the first known form, where male citizens voted directly on laws."],
+["Persian Empire","Classical","550 BCE","Founded by Cyrus the Great. At its peak it was the largest empire the world had yet seen, stretching from Egypt to India."],
+["Peloponnesian War","Classical","431–404 BCE","A war between Athens and Sparta and their allies. Sparta won, and Athens never regained its former power."],
+["Alexander the Great","Classical","336–323 BCE","King of Macedon who conquered the Persian Empire and spread Greek culture to Egypt and northwest India."],
+["Hellenistic period","Classical","323–31 BCE","The era after Alexander when Greek language and culture blended with those of Egypt, Persia and beyond."],
+["Roman Republic","Classical","509–27 BCE","Rome’s government before emperors, led by elected officials and the Senate."],
+["Punic Wars","Classical","264–146 BCE","Three wars between Rome and Carthage. Hannibal’s crossing of the Alps is the most famous episode."],
+["Silk Road","Classical","c. 130 BCE","A network of trade routes linking China, Central Asia, India and the Mediterranean. Silk, spices, ideas and diseases travelled along it."],
+["Pax Romana","Classical","27 BCE–180 CE","About two centuries of relative peace and stability across the Roman Empire."],
+["Fall of Rome","Medieval","476 CE","The traditional date when the last western Roman emperor was deposed. The eastern half survived as the Byzantine Empire."],
+["Byzantine Empire","Medieval","330–1453","The eastern Roman Empire, centred on Constantinople. It ended when the Ottomans captured the city."],
+["Feudalism","Medieval","c. 800–1400","A system where lords gave land to vassals in return for loyalty and military service, with peasants working the land."],
+["Hijra","Medieval","622","The journey of the Prophet Muhammad from Mecca to Medina. It marks year one of the Islamic calendar."],
+["Islamic Golden Age","Medieval","c. 750–1258","A period of advances in science, medicine, maths and philosophy, centred on Baghdad’s House of Wisdom."],
+["Tang dynasty","Medieval","618–907","A Chinese dynasty known for prosperity, poetry, and a capital, Chang’an, that was among the world’s largest cities."],
+["Viking Age","Medieval","793–1066","Scandinavian raiders, traders and settlers who reached Britain, Russia, Iceland and North America."],
+["Magna Carta","Medieval","1215","A charter forced on King John of England. It established that even the king must obey the law."],
+["Crusades","Medieval","1096–1291","A series of religious wars launched by European Christians to take Jerusalem and the Holy Land."],
+["Mongol Empire","Medieval","1206–1368","Founded by Genghis Khan. It became the largest connected land empire in history."],
+["Mali Empire","Medieval","c. 1235–1600","A West African empire rich in gold. Its ruler Mansa Musa is often named among the wealthiest people ever."],
+["Black Death","Medieval","1347–1351","A plague pandemic that killed an estimated third or more of Europe’s population."],
+["Renaissance","Early modern","c. 1400–1600","A revival of art, learning and ideas from ancient Greece and Rome, beginning in Italy."],
+["Printing press","Early modern","c. 1440","Johannes Gutenberg’s movable-type press in Europe made books cheap and spread ideas fast."],
+["Ottoman Empire","Early modern","1299–1922","A Muslim-ruled empire that held Anatolia, the Balkans, the Middle East and North Africa at its height."],
+["Columbian Exchange","Early modern","1492 onward","The transfer of plants, animals, people and diseases between the Americas and the Old World after Columbus."],
+["Reformation","Early modern","1517","A movement started by Martin Luther that split Western Christianity and created Protestant churches."],
+["Mughal Empire","Early modern","1526–1857","A powerful empire in South Asia founded by Babur. It built the Taj Mahal.","IN"],
+["Scientific Revolution","Early modern","c. 1543–1687","A shift to testing ideas by observation and experiment, linked with Copernicus, Galileo and Newton."],
+["Atlantic slave trade","Early modern","c. 1500–1860s","The forced shipment of millions of Africans to the Americas to work on plantations and in mines."],
+["Enlightenment","Early modern","c. 1685–1815","An intellectual movement that stressed reason, liberty and human rights, shaping modern democracies."],
+["American Revolution","Modern","1775–1783","Thirteen British colonies fought for independence and formed the United States."],
+["French Revolution","Modern","1789–1799","A revolt that ended the monarchy in France and spread ideas of liberty and equality across Europe."],
+["Industrial Revolution","Modern","c. 1760–1840","The shift from hand work to machines and factories, beginning in Britain."],
+["Colonialism","Modern","c. 1500–1960s","When one country takes control of another territory and its people, usually for resources and power."],
+["Meiji Restoration","Modern","1868","Japan’s return to imperial rule and rapid modernisation after centuries of shogun rule."],
+["World War I","Modern","1914–1918","A global war centred in Europe, set off by the assassination of Archduke Franz Ferdinand. Over 15 million died."],
+["Russian Revolution","Modern","1917","Uprisings that toppled the tsar and led to the creation of the Soviet Union."],
+["Great Depression","Modern","1929–1939","A worldwide economic collapse with mass unemployment, following the US stock market crash."],
+["World War II","Modern","1939–1945","The deadliest conflict in history, between the Allied and Axis powers, including the Holocaust."],
+["Cold War","Modern","1947–1991","A standoff between the United States and the Soviet Union, fought through rivalry rather than direct war."],
+["Indian independence","Modern","1947","India and Pakistan gained freedom from British rule, with the partition causing mass migration and violence.","IN"],
+["Decolonisation","Modern","1945–1975","The wave of African, Asian and Caribbean colonies winning independence."],
+["Fall of the Berlin Wall","Modern","1989","The opening of the wall dividing East and West Berlin, a key moment in the end of the Cold War."],
+["Indus Valley Civilisation","Ancient","c. 3300–1300 BCE","One of the first urban cultures, with planned cities like Harappa and Mohenjo-daro, drains, standard weights and a script that is still undeciphered.","IN"],
+["Vedic period","Ancient","c. 1500–500 BCE","The age when the Vedas, India’s oldest sacred texts, were composed in early Sanskrit, and settlement spread across the Ganges plain.","IN"],
+["Mahajanapadas","Classical","c. 600–300 BCE","Sixteen kingdoms and republics of northern India, including Magadha, which grew into the base of later empires.","IN"],
+["Buddhism","Classical","c. 5th century BCE","Founded by Siddhartha Gautama, the Buddha, who taught in the Ganges plain. It later spread across Asia.","IN"],
+["Jainism","Classical","c. 6th century BCE","An Indian religion centred on non-violence (ahimsa). Mahavira is regarded as its 24th teacher.","IN"],
+["Maurya Empire","Classical","322–185 BCE","Founded by Chandragupta Maurya, with the adviser Chanakya. It was the first empire to unite most of the subcontinent.","IN"],
+["Ashoka","Classical","c. 268–232 BCE","Mauryan emperor who turned to Buddhism after the bloody Kalinga war and spread his message on stone pillars and rock edicts.","IN"],
+["Arthashastra","Classical","c. 300 BCE–300 CE","An ancient manual on statecraft, economics and military strategy, traditionally credited to Kautilya (Chanakya). Its exact dating is debated.","IN"],
+["Gupta Empire","Classical","c. 320–550 CE","Often called a golden age of science, maths, art and literature, including the poet Kalidasa and the astronomer Aryabhata.","IN"],
+["Chola dynasty","Medieval","c. 850–1279","A South Indian power with a strong navy that reached Southeast Asia. It built the Brihadisvara Temple at Thanjavur.","IN"],
+["Bhakti movement","Medieval","c. 700–1700","A wave of devotional poetry and worship, led by saints such as Kabir and Mirabai, that stressed personal devotion over ritual and caste.","IN"],
+["Delhi Sultanate","Medieval","1206–1526","Five successive Muslim dynasties ruling from Delhi, ending when Babur defeated the last sultan.","IN"],
+["Vijayanagara Empire","Medieval","1336–1646","A South Indian empire with its capital at Hampi, known for trade, temples and defending the south against northern sultanates.","IN"],
+["Sikhism","Early modern","from 1469","Founded by Guru Nanak in Punjab. In 1699 Guru Gobind Singh created the Khalsa community.","IN"],
+["First Battle of Panipat","Early modern","1526","Babur defeated Ibrahim Lodi, ending the Delhi Sultanate and starting the Mughal Empire.","IN"],
+["Akbar","Early modern","1556–1605","Mughal emperor who expanded the empire, organised its administration and encouraged religious tolerance.","IN"],
+["Maratha Empire","Early modern","1674–1818","Began when Shivaji was crowned Chhatrapati in 1674. At its height it controlled much of India.","IN"],
+["East India Company","Early modern","1600–1858","An English trading company chartered in 1600 that gradually became the ruling power in much of India.","IN"],
+["Battle of Plassey","Early modern","1757","Company forces under Robert Clive defeated the Nawab of Bengal, a turning point towards British rule.","IN"],
+["Revolt of 1857","Modern","1857–1858","A widespread uprising that began with sepoys at Meerut. It led Britain to end Company rule and take direct control.","IN"],
+["British Raj","Modern","1858–1947","The period of direct British Crown rule over India.","IN"],
+["Indian National Congress","Modern","1885","Political party founded in 1885 that later led the mainstream independence movement.","IN"],
+["Jallianwala Bagh","Modern","1919","British troops under General Dyer fired on an unarmed crowd in Amritsar, killing hundreds and hardening opposition to British rule.","IN"],
+["Mahatma Gandhi","Modern","1869–1948","Leader of India’s freedom struggle who used satyagraha, or non-violent resistance. He was assassinated in 1948.","IN"],
+["Salt March","Modern","1930","Gandhi led a march of about 390 km to Dandi to make salt in defiance of the British salt tax.","IN"],
+["Quit India Movement","Modern","1942","A mass campaign launched in August 1942 demanding an immediate end to British rule.","IN"],
+["Constitution of India","Modern","1949–1950","Adopted on 26 November 1949 and in force from 26 January 1950, with B. R. Ambedkar chairing the drafting committee.","IN"],
+["Green Revolution","Modern","1960s","High-yield wheat and rice and better irrigation raised grain output and ended India’s dependence on food imports. M. S. Swaminathan was a key figure.","IN"],
+["Economic liberalisation","Modern","1991","Reforms under P. V. Narasimha Rao and Manmohan Singh opened India’s economy to trade and private investment.","IN"]
+];
+var favs=[],era="All",showFav=false,onlyIn=false;
+try{favs=JSON.parse(localStorage.getItem("whd-favs")||"[]")}catch(e){favs=[]}
+function save(){try{localStorage.setItem("whd-favs",JSON.stringify(favs))}catch(e){}}
+var $=function(i){return document.getElementById(i)};
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function chips(){
+  var items=["All","India"].concat(ERAS,["Saved"]);
+  $("chips").innerHTML=items.map(function(e){
+    var on=e==="Saved"?showFav:e==="India"?onlyIn:(!showFav&&e===era);
+    return '<button class="chip" data-e="'+e+'" aria-pressed="'+on+'">'+e+'</button>'}).join("");
+}
+function render(only){
+  var q=$("q").value.trim().toLowerCase();
+  var rows=D.filter(function(d){
+    if(only)return d[0]===only;
+    if(onlyIn&&d[4]!=="IN")return false;
+    if(showFav&&favs.indexOf(d[0])<0)return false;
+    if(!showFav&&era!=="All"&&d[1]!==era)return false;
+    return !q||d[0].toLowerCase().indexOf(q)>-1||d[3].toLowerCase().indexOf(q)>-1;
+  }).sort(function(a,b){return a[0].localeCompare(b[0])});
+  $("count").textContent=rows.length+(rows.length===1?" term":" terms");
+  if(!rows.length){$("list").innerHTML='<p class="empty">'+(showFav?'Tap the star on a term to save it here.':'No terms match. Try a shorter word or a different era.')+'</p>';return}
+  $("list").innerHTML=rows.map(function(d){
+    var f=favs.indexOf(d[0])>-1;
+    return '<article class="entry'+(f?' fav':'')+(d[4]?' in':'')+'"><div class="head"><div class="badge" aria-hidden="true">'+EI[d[1]]+'</div><div class="grow"><h2 class="term">'+esc(d[0])+'</h2><p class="meta">'+d[1]+', '+esc(d[2])+'</p></div><button class="star" data-t="'+esc(d[0])+'" aria-pressed="'+f+'" aria-label="'+(f?'Remove ':'Save ')+esc(d[0])+'">'+(f?'★':'☆')+'</button></div><p class="def">'+esc(d[3])+'</p></article>'}).join("");
+}
+$("q").addEventListener("input",function(){render()});
+$("chips").addEventListener("click",function(e){
+  var b=e.target.closest(".chip");if(!b)return;
+  var e2=b.dataset.e;if(e2==="Saved"){showFav=true}else if(e2==="India"){onlyIn=!onlyIn;showFav=false}else{showFav=false;era=e2;if(e2==="All")onlyIn=false}
+  chips();render();
+});
+$("list").addEventListener("click",function(e){
+  var b=e.target.closest(".star");if(!b)return;
+  var t=b.dataset.t,i=favs.indexOf(t);
+  if(i>-1)favs.splice(i,1);else favs.push(t);
+  save();render($("list").children.length===1&&$("rand").dataset.on==="1"?t:undefined);
+});
+$("rand").addEventListener("click",function(){
+  var d=D[Math.floor(Math.random()*D.length)];
+  $("q").value="";$("rand").dataset.on="1";render(d[0]);
+});
+$("q").addEventListener("input",function(){$("rand").dataset.on="0"});
+$("chips").addEventListener("click",function(){$("rand").dataset.on="0"});
+chips();render();
+</script>
+</body>
+</html>
